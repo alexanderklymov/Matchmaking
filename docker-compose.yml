@@ -1,0 +1,62 @@
+services:
+  zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: wurstmeister/kafka
+    container_name: matchmaking-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_CREATE_TOPICS: "matchmaking.request:1:1,matchmaking.complete:1:1"
+    depends_on:
+      - zookeeper
+
+  matchmaking-redis:
+    image: redis:7
+    container_name: matchmaking-redis
+    ports:
+      - "6379:6379"
+
+  matchmaking-service:
+    build:
+      context: ./MatchMaking.Service
+    container_name: matchmaking-service
+    environment:
+      ASPNETCORE_URLS: http://0.0.0.0:8080
+      KAFKA__BOOTSTRAP: kafka:9092
+      REDIS__HOST: matchmaking-redis:6379
+    ports:
+      - "8080:8080"
+    depends_on:
+      - kafka
+      - matchmaking-redis
+
+  matchmaking-worker1:
+    build:
+      context: ./MatchMaking.Worker
+    container_name: matchmaking-worker1
+    environment:
+      KAFKA__BOOTSTRAP: kafka:9092
+      REDIS__HOST: matchmaking-redis:6379
+    depends_on:
+      - kafka
+      - matchmaking-redis
+
+  matchmaking-worker2:
+    build:
+      context: ./MatchMaking.Worker
+    container_name: matchmaking-worker2
+    environment:
+      KAFKA__BOOTSTRAP: kafka:9092
+      REDIS__HOST: matchmaking-redis:6379
+    depends_on:
+      - kafka
+      - matchmaking-redis
