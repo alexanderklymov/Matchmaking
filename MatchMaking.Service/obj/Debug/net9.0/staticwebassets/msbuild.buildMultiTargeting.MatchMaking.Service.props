@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="..\build\MatchMaking.Service.props" />
-</Project>

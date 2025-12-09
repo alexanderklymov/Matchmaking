@@ -31,8 +31,6 @@ packages/
 ############################
 # Docker
 ############################
-docker-compose.override.yml
-docker-compose.*.yml
 **/docker-compose*.log
 **/docker-compose*.tmp
 
